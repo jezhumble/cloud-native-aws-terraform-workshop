@@ -62,8 +62,8 @@ Then <code>terraform apply terraform</code>
     {
       "Effect": "Allow",
       "Action": [ "s3:Get*", "s3:List*" ],
-      "Resource": [ "arn:aws:s3:::18f-terraform-workshop",
-                    "arn:aws:s3:::18f-terraform-workshop/*" ]
+      "Resource": [ "arn:aws:s3:::jez-cloud-workshop",
+                    "arn:aws:s3:::jez-cloud-workshop/*" ]
     }<mark>,
     {
       "Effect": "Allow",
@@ -191,7 +191,7 @@ output "rds_instance_id" {
 				  In the <code>aws_launch_configuration</code> section of <code>autoscale.tf</code>:
 				  <pre><code data-noescape>    user_data =  &lt;&lt;EOF
 #!/usr/bin/env bash
-<mark>aws s3 cp s3://18f-terraform-workshop/credentials /etc/environment
+<mark>aws s3 cp s3://jez-cloud-workshop/credentials /etc/environment
 echo "export HTTP_DB_URI=${aws_db_instance.workshop_db.endpoint}" \
   >> /etc/environment</mark>
 aws s3 cp s3://18f-terraform-workshop/provision.sh /root/

@@ -150,7 +150,7 @@ Then <code>terraform apply terraform</code>
         "${aws_iam_instance_profile.workshop_profile.arn}"    
     user_data =  &lt;&lt;EOF
 #!/usr/bin/env bash
-aws s3 cp s3://18f-terraform-workshop/provision.sh /root/
+aws s3 cp s3://jez-cloud-workshop/provision.sh /root/
 bash /root/provision.sh
 EOF</i></code></pre>
 				  <aside class="notes">
@@ -195,8 +195,8 @@ EOF
     {
       "Effect": "Allow",
       "Action": [ "s3:Get*", "s3:List*" ],
-      "Resource": [ "arn:aws:s3:::18f-terraform-workshop",
-                    "arn:aws:s3:::18f-terraform-workshop/*" ]
+      "Resource": [ "arn:aws:s3:::jez-cloud-workshop",
+                    "arn:aws:s3:::jez-cloud-workshop/*" ]
     }
   ]
 }

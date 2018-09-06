@@ -39,7 +39,7 @@ Because the class requires hands-on coding, we recommend a maximum of 16 partici
 
 We recommend using an empty AWS account for this workshop. Each participant will set up their own VPC in the course of the workshop, and if you've created a new AWS account you will need to submit a request to raise [the default VPC limit of 5 VPCs per region](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html). This should be done several days in advance of delivering the class.
 
-The instructor should upload the contents of the [code/scripts](code/scripts) directory to an S3 bucket. The code and slides assume that the S3 bucket is called `18f-terraform-workshop`, but if you're not running this at 18F, you'll want to upload to your own bucket, and you should change all the references to this S3 bucket in the repo. Find them using `grep -R "18f-terraform-bucket" *`
+The instructor should upload the contents of the [code/scripts](code/scripts) directory to an S3 bucket. The code and slides assume that the S3 bucket is called `jez-cloud-workshop`, but if you're not running this at 18F, you'll want to upload to your own bucket, and you should change all the references to this S3 bucket in the repo. Find them using `grep -R "jez-cloud-workshop" *`
 
 ### Acknowledgements
 
