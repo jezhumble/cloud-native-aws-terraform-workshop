@@ -63,7 +63,7 @@ resource "aws_subnet" "public_subnet_1" {
 }
 
 resource "aws_instance" "bastion" {
-    ami = "ami-c481fad3"
+    ami = "ami-428aa838"
     subnet_id = "${aws_subnet.public_subnet_1.id}"
     associate_public_ip_address = true
     key_name = "<mark>[key name]</mark>"
@@ -78,6 +78,7 @@ resource "aws_instance" "bastion" {
 				  <ul>
 				    <li>Create a directory called <code>terraform</code></li>
 				    <li>Save the file as <code>terraform/terraform.tf</code></li>
+				    <li>Run <code>terraform init terraform</code></li>
 				    <li>Run <code>terraform apply terraform</code></li>
 				    <li><code>grep '"id": "i-.*"' terraform.tfstate</code></li>
 				    <li>Go find your new EC2 instance in the console</li>
@@ -122,7 +123,7 @@ resource "aws_instance" "bastion" {
 				</section>
 				<section>
 				  <h2>AWS datacenters ("regions")</h2>
-				  <img src="https://d0.awsstatic.com/Test%20Images/Kate%20Test%20Images/Global_Infrastructure_kwV21.png" alt="AWS's datacenters"/>
+				  <img src="https://d1.awsstatic.com/about-aws/regions/global-infra_3.30.18.b559f46825615c1ae40f319d0c4d9139fea9c492.png" alt="AWS's datacenters"/>
 				  <aside class="notes">
 				    AWS "regions" are completely independent, and function as virtual datacenters (in reality, they're comprised of multiple physical datacenters). Traffic between them goes over the public internet.
 				  </aside>
@@ -164,7 +165,7 @@ resource "aws_route_table_association" "route_subnet_1" {
 				<section>
 				  <h2>OK let's network!</h2>
 				  <ul>
-				    <li><code>terraform plan</code></li>
+				    <li><code>terraform plan terraform</code></li>
 				    <li>How cool is that!</li>
 				    <li><code>terraform apply terraform</code></li>
 				    <li>(Note: <code>terraform apply</code> is idempotent)</li>
