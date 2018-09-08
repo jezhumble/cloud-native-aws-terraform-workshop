@@ -174,7 +174,7 @@ output "alb.dns" {
 				<section>
 				  <h2>Launch configuration</h2>
 				  <pre><code data-noescape>resource "aws_launch_configuration" "workshop_launch_conf" {
-    image_id = "ami-c481fad3"
+    image_id = "ami-04681a1dbd79675a5"
     instance_type = "t2.micro"
     key_name = "<mark>[key name]</mark>"
     security_groups = ["${aws_security_group.web_sg.id}"]

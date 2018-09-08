@@ -63,7 +63,7 @@ resource "aws_subnet" "public_subnet_1" {
 }
 
 resource "aws_instance" "bastion" {
-    ami = "ami-428aa838"
+    ami = "ami-04681a1dbd79675a5"
     subnet_id = "${aws_subnet.public_subnet_1.id}"
     associate_public_ip_address = true
     key_name = "<mark>[key name]</mark>"
@@ -197,7 +197,7 @@ resource "aws_route_table_association" "route_subnet_1" {
 				<section>
 				  <h2>Now attach it to our instance</h2>
 				  <pre><code data-noescape>resource "aws_instance" "bastion" {
-    ami = "ami-6869aa05"
+    ami = "ami-04681a1dbd79675a5"
     subnet_id = "${aws_subnet.public_subnet_1.id}"
     associate_public_ip_address = true
     key_name = "[key name]"

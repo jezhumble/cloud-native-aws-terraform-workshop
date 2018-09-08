@@ -138,7 +138,7 @@ Then <code>terraform apply terraform</code>
 				  <h2>Update Launch Configuration</h2>
 				  (new sections <i>italicised</i>)
 				  <pre><code data-noescape>resource "aws_launch_configuration" "workshop_launch_conf" {
-    image_id = "ami-c481fad3"
+    image_id = "ami-04681a1dbd79675a5"
     instance_type = "t2.micro"
     key_name = "jez"
     security_groups = ["${aws_security_group.web_sg.id}"]
@@ -161,7 +161,7 @@ EOF</i></code></pre>
 				  <h2>Instance Profiles</h2>
 				  <pre><code data-noescape>resource "aws_iam_instance_profile" "workshop_profile" {
     name = "workshop_profile_<mark>[name]</mark>"
-    roles = ["${aws_iam_role.ec2_role.name}"]
+    role = "${aws_iam_role.ec2_role.name}"
 }</code></pre>
 				</section>
 				<section>
