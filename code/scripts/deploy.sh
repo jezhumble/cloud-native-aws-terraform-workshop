@@ -7,5 +7,6 @@ then
     cd /var/www
     mkdir $STAMP
     tar -xjf latest.tar.bz2 -C$STAMP --strip-components 1
+    composer install --no-ansi --no-dev --no-interaction --no-progress --no-scripts --optimize-autoloader --working-dir /var/www/$STAMP
     ln -sfT $STAMP html
 fi

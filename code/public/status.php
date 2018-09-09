@@ -1,10 +1,19 @@
 <?
-$db_config = getenv("HTTP_DB_URI");
-$db_hostname = explode(":", getenv("HTTP_DB_URI"));
+require __DIR__ . '/vendor/autoload.php';
+use Aws\Ssm\SsmClient;
+
+$parameters = "";
+$path = "/";
 try {
-    $connection = new PDO("mysql:host=".$db_hostname[0].";dbname=db18fworkshop;charset=utf8", "workshop", getenv("HTTP_DB_PASSWORD"));
+    $client = new SsmClient(["version" => "latest", "region" => "us-east-1"]);
+    $results = $client->getParametersByPath(['Path' => $path, 'WithDecryption' => true]);
+    foreach ($results['Parameters'] as $parameter) {
+	$key = str_replace($path, "", $parameter['Name']);
+        $this->parameters[$key] = $parameter['Value'];
+    }
+    $connection = new PDO("mysql:host=".$parameters['DB_URI'].";dbname=jez-workshop;charset=utf8", "workshop", $parameters['DB_PASSWORD']);
 } catch (Exception $e) {
     http_response_code(500);
-    error_log("Couldn't create database connection with URI: ".$db_config." Error: ".$e->getMessage());
+    error_log("Couldn't create database connection. Error: ".$e->getMessage());
 }
 ?>

@@ -18,6 +18,12 @@ chown -R ec2-user:www /var/www
 find /var/www -type d -exec chmod 2750 {} +
 find /var/www -type f -exec chmod 0640 {} +
 
+# install php composer
+wget -O composer-setup.php https://getcomposer.org/installer
+php composer-setup.php --quiet
+mv composer.phar /usr/local/bin/composer
+ln -s /usr/local/bin/composer /usr/bin/composer
+
 # install cloudwatch
 aws s3 cp s3://jez-cloud-workshop/cloudwatch.conf /etc/awslogs/awslogs.conf
 systemctl enable awslogsd.service
