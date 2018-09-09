@@ -26,7 +26,7 @@
 			<div class="slides">
 				<section>
 				  <h2>Infrastructure as Code with Terraform and AWS</h2>
-				  <h2><em>Unit 6: Databases</em></h2>
+				  <h2><em>Unit 6: Databases and Secrets</em></h2>
 				  <p>This 18F <a href="https://github.com/18F/12-factor-aws-terraform-training">workshop</a> is in the worldwide public domain.</p>
 				</section>
 				<section>
@@ -85,7 +85,7 @@ EOF
 				  </aside>
 				</section>
 				<section>
-				  <p>Now we have a failing test, and in the logs you should see something like <code>Couldn't create database connection with URI: Error: SQLSTATE[HY000] [2002] No such file or directory</code></p>
+				  <p>Now we have a failing test, and in the logs you should see something like <code>Couldn't create database connection: Error: SQLSTATE[HY000] [2002] No such file or directory</code></p>
 				  <p>Note: <b>We're not going to create databases for everyone.</b> For the rest of the class, the instructor will run the code.</p>
 				  <aside class="notes">This is because we can't provide credentials separately for each participant without creating S3 buckets for everyone, and it's too much of a drag for a 1-day workshop. Instructors should create the db up front, and supply the correct credentials in order to make the alert stop.</aside>
 				</section>
@@ -153,7 +153,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
   engine = "mysql"
   multi_az = false # True in real life for HA
   instance_class = "db.t2.micro"
-  name = "db18fworkshop"
+  name = "jezworkshop"
   username = "workshop"
   password = "dummy_password"
   publicly_accessible = false
@@ -162,70 +162,96 @@ resource "aws_db_subnet_group" "db_subnet_group" {
   db_subnet_group_name = "${aws_db_subnet_group.db_subnet_group.id}"
   vpc_security_group_ids = [ "${aws_security_group.db.id}" ]
 }
+				  </code></pre>
+				</section>
+				<section>
+				  <h2>Creating a Database</h2>
+				  Get some parameters we'll need later
+				  <pre><code data=noescape>
 
 output "rds_instance_id" {
   value = "${aws_db_instance.workshop_db.id}"
+}
+
+output "rds_instance_uri" {
+  value = "${aws_db_instance.workshop_db.address}"
 }
 				  </code></pre>
 				</section>
 				<section>
 				  <h2>Getting DB Creds To Our App</h2>
-				  <li class="fragment">We can get the DB connection string out of terraform</li>
-				  <li class="fragment">The password is more annoying</li>
-				  <li class="fragment">We'll set the password from the command line, then pass it in a file via S3</li>
-				  <aside class="notes">This is annoying. There is no instance profile equivalent to make creds magically appear on the host. This is probably not the best way but...</aside>				    
+				  <li class="fragment">There are several tools to manage secrets in a cloud context, e.g. HashiCorp's Vault.</li>
+				  <li class="fragment">We'll be using an AWS service called Systems Manager. It has a 'parameter store'.</li>
+				  <li class="fragment">We can get credentials programmatically from AWS SSM.</li>
+				  <li class="fragment">First we need to give our EC2 boxes permissions to access SSM.</aside>				    
 				</section>
 				<section>
-				  <h2>Setting Up the First Domino</h2>
-				  Create <code>/code/scripts/credentials</code> in your repo with the following contents:
-				  <pre><code data-noescape>export HTTP_DB_PASSWORD=<mark>&lt;long_random_string&gt;</mark></code></pre>
-				  Then on the command line, <code>terraform apply terraform</code> and note the value of <code>rds_instance_id</code>. Finally, run:
+				  <h2>IAM permissions to access SSM</h2>
+				  <pre><code data-noescape>resource "aws_iam_role_policy" "s3_bucket_policy" {
+...
+      "Action": [ "logs:CreateLogGroup", "logs:CreateLogStream",
+        "logs:PutLogEvents", "logs:DescribeLogStreams" ],
+      "Resource": [ "arn:aws:logs:*:*:*" ]
+    }<mark>,
+    {
+      "Effect": "Allow",
+      "Action": [ "kms:Decrypt" ],
+      "Resource": "arn:aws:kms:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [ "ssm:GetParametersByPath" ],
+      "Resource": "*"
+    }</mark>
+]
+...</code></pre>
+<p>Don't miss the comma!</p>
+				</section>
+				<section>
+				  <h2>EC2 role to access SSM</h2>
+				  <pre><code data-noescape>resource "aws_iam_role" "ec2_role" {
+    name = "ec2_role_<mark>[name]</mark>"
+    assume_role_policy = &lt;&lt;EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": { "Service": <mark>[</mark> "ec2.amazonaws.com" <mark>,</mark>
+					<mark>"ssm.amazonaws.com" ]</mark>},
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}</code></pre>
+<p><code>terraform apply terraform</code></p>
+				</section>
+				<section>
+				  <h2>Create the Secrets</h2>
+				  <ul>
+				    <li>Make a long random string to use as a password for the DB</li>
+				    <li>Paste it into the SSM Parameter Store console</li>
+				  <li>Finally, run:
 				  <pre><code data-noescape>aws rds modify-db-instance \
   --db-instance-identifier <mark>&lt;rds_instance_id&gt;</mark> \
-  --apply-immediately --master-user-password <mark>&lt;db_password&gt;</mark>
-./deploy.sh # copy credentials to S3 bucket</code></pre>
-				  ...you can (and should) script this.
-				</section>
-				<section>
-				  <h2>Connection String</h2>
-				  In the <code>aws_launch_configuration</code> section of <code>autoscale.tf</code>:
-				  <pre><code data-noescape>    user_data =  &lt;&lt;EOF
-#!/usr/bin/env bash
-<mark>aws s3 cp s3://jez-cloud-workshop/credentials /etc/environment
-echo "export HTTP_DB_URI=${aws_db_instance.workshop_db.endpoint}" \
-  >> /etc/environment</mark>
-aws s3 cp s3://18f-terraform-workshop/provision.sh /root/
-bash /root/provision.sh
-EOF</code></pre>
-Now <code>terraform apply terraform</code> and kill your auto scaling EC2 instances (again).
-</section>
-				<section>
-				  <h2>Getting the Creds to the App</h2>
-				  Our provision script sends it to the httpd init script...
-				  <pre><code>echo ". /etc/environment" | cat - /etc/init.d/httpd > /tmp/httpd \
-&& mv /tmp/httpd /etc/init.d/httpd</code></pre>
-				  httpd's configuration passes it to the app...
-				  <pre><code>&lt;Directory "/var/www/html"&gt;
-    PassEnv HTTP_DB_URI
-    PassEnv HTTP_DB_PASSWORD
-...
-&lt;Directory&gt;</code></pre>
-(PHP only accepts environment variables with the <code>HTTP_</code> prefix for securitay)
-
+  --apply-immediately --master-user-password <mark>&lt;db_password&gt;</mark></code></pre></li>
+				  </ul>
 				</section>
 				<section>
 				  <h2>Unit 6 review</h2>
 				  <ul>
 				    <li class="fragment">We set up distributed logging using CloudWatch</li>
 				    <li class="fragment">We introduced RDS</li>
-				    <li class="fragment">We showed a simple way to get credentials to our app</li>
+				    <li class="fragment">We showed how to manage secrets</li>
+				    <li class="fragment">We created monitoring to check our app can connect to the db</li>
 				  </ul>
 				</section>
 				<section>
 				  <h2>Loose ends</h2>
 				  <ul>
-				    <li>X509 certificates and https</li>
-				    <li>Proper secret management (e.g. Vault)</li>
+				    <li>X509 certificates and https (use a CDN, e.g. CloudFront)</li>
 				    <li>Variables and modules in Terraform</li>
 				    <li>Putting things in CI</li>
 				  </ul>
