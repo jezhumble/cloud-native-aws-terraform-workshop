@@ -153,7 +153,7 @@ resource "aws_alb_target_group" "workshop_alb" {
 				  </aside>
 				</section>
 				<section>
-				  <h2>ALB target group</h2>
+				  <h2>ALB listener</h2>
 <pre><code data-noescape>resource "aws_alb_listener" "workshop_alb_http" {
   load_balancer_arn = "${aws_alb.workshop_alb.arn}"
   port = 80
@@ -185,8 +185,9 @@ output "alb.dns" {
     user_data = &lt;&lt;EOF
 #!/usr/bin/env bash
 yum update -y
-yum install -y httpd24
-service httpd start
+yum install -y httpd
+systemctl enable httpd.service
+systemctl start httpd
 EOF
 }</code></pre>
 				</section>
